@@ -637,98 +637,477 @@
 //     </section>
 //   );
 // }
+// 'use client';
+
+// import { useRef, useEffect, useState } from 'react';
+// import Link from 'next/link';
+// import { motion, useInView } from 'framer-motion';
+// import { useProductStore } from '@/lib/store';
+// import {
+//   FiShoppingCart,
+//   FiHeart,
+//   FiEye,
+//   FiStar,
+//   FiPackage,
+//   FiArrowRight,
+//   FiZap,
+// } from 'react-icons/fi';
+
+// export default function FeaturedProducts() {
+//   const sectionRef = useRef(null);
+//   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
+//   const [featuredProducts, setFeaturedProducts] = useState([]);
+
+//   // We only read products + loading.
+//   // fetchProducts is now called from HomePage, not here.
+//   const { products, isLoading } = useProductStore();
+
+//   // When products change, recompute featured products
+//   useEffect(() => {
+//     if (!Array.isArray(products) || products.length === 0) {
+//       setFeaturedProducts([]);
+//       return;
+//     }
+
+//     // Prefer products explicitly marked as featured
+//     let featured = products.filter(
+//       (p) => p?.featured === true || p?.featured === 'true' || p?.featured === 1
+//     );
+
+//     // If none are marked, fallback to first 4 products
+//     if (featured.length === 0) {
+//       console.warn(
+//         '[FeaturedProducts] No products have "featured" flag set. Showing first 4 products as fallback.'
+//       );
+//       featured = products.slice(0, 4);
+//     }
+
+//     setFeaturedProducts(featured);
+//   }, [products]);
+
+//   const containerVariants = {
+//     hidden: { opacity: 0 },
+//     visible: {
+//       opacity: 1,
+//       transition: { staggerChildren: 0.1 },
+//     },
+//   };
+
+//   const itemVariants = {
+//     hidden: { opacity: 0, y: 60, scale: 0.95 },
+//     visible: {
+//       opacity: 1,
+//       y: 0,
+//       scale: 1,
+//       transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+//     },
+//   };
+
+//   const floatingAnimation = {
+//     y: [0, -10, 0],
+//     transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
+//   };
+
+//   /* ----------------- LOADING SKELETON ----------------- */
+//   if (isLoading) {
+//     return (
+//       <section className="py-24 bg-white dark:bg-black relative overflow-hidden">
+//         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+//         <div className="container mx-auto px-4 relative z-10">
+//           <div className="text-center mb-20">
+//             <div className="h-12 w-72 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 rounded-2xl mx-auto mb-6 animate-pulse" />
+//             <div className="h-6 w-full max-w-[500px] bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 rounded-xl mx-auto animate-pulse" />
+//           </div>
+
+//           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+//             {[1, 2, 3, 4].map((i) => (
+//               <div key={i} className="group relative">
+//                 <div className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden">
+//                   <div className="h-80 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 animate-pulse" />
+//                   <div className="p-6 space-y-4">
+//                     <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+//                     <div className="h-6 w-full bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+//                     <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+//                     <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+//                   </div>
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//         </div>
+//       </section>
+//     );
+//   }
+
+//   /* ----------------- EMPTY STATE ----------------- */
+//   if (!featuredProducts || featuredProducts.length === 0) {
+//     return (
+//       <section className="py-24 bg-white dark:bg-black relative overflow-hidden">
+//         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+//         <div className="container mx-auto px-4 relative z-10">
+//           <motion.div
+//             initial={{ opacity: 0, y: 20 }}
+//             animate={{ opacity: 1, y: 0 }}
+//             className="text-center max-w-2xl mx-auto"
+//           >
+//             <motion.div
+//               animate={floatingAnimation}
+//               className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 rounded-3xl mb-8"
+//             >
+//               <FiPackage className="w-12 h-12 text-gray-600 dark:text-gray-400" />
+//             </motion.div>
+//             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+//               Featured Products
+//             </h2>
+//             <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 leading-relaxed">
+//               No featured products available at the moment. Check back soon for our latest curated collection!
+//             </p>
+//             <Link href="/products">
+//               <motion.button
+//                 whileHover={{ scale: 1.05, y: -2 }}
+//                 whileTap={{ scale: 0.95 }}
+//                 className="group inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-2xl transition-all duration-300"
+//               >
+//                 Browse All Products
+//                 <FiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+//               </motion.button>
+//             </Link>
+//           </motion.div>
+//         </div>
+//       </section>
+//     );
+//   }
+
+//   /* ----------------- MAIN GRID ----------------- */
+//   return (
+//     <section
+//       ref={sectionRef}
+//       className="py-24 bg-white dark:bg-black relative z-10 overflow-hidden"
+//     >
+//       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+//       <motion.div
+//         animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+//         transition={{ duration: 8, repeat: Infinity }}
+//         className="absolute top-0 right-1/4 w-96 h-96 bg-gray-300 dark:bg-gray-700 rounded-full blur-3xl opacity-30"
+//       />
+//       <motion.div
+//         animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
+//         transition={{ duration: 10, repeat: Infinity }}
+//         className="absolute bottom-0 left-1/4 w-96 h-96 bg-gray-400 dark:bg-gray-600 rounded-full blur-3xl opacity-20"
+//       />
+
+//       <div className="container mx-auto px-4 relative z-10">
+//         {/* Heading */}
+//         <motion.div
+//           initial={{ opacity: 0, y: 40 }}
+//           animate={isInView ? { opacity: 1, y: 0 } : {}}
+//           transition={{ duration: 0.8, ease: 'easeOut' }}
+//           className="text-center mb-20"
+//         >
+//           <motion.div
+//             initial={{ scale: 0, rotate: -180 }}
+//             animate={isInView ? { scale: 1, rotate: 0 } : {}}
+//             transition={{ duration: 0.6, delay: 0.2, type: 'spring' }}
+//             className="inline-block mb-6"
+//           >
+//             <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 rounded-full text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+//               <FiZap className="w-4 h-4" />
+//               Featured Collection
+//             </span>
+//           </motion.div>
+
+//           <motion.h2
+//             initial={{ opacity: 0, y: 20 }}
+//             animate={isInView ? { opacity: 1, y: 0 } : {}}
+//             transition={{ duration: 0.8, delay: 0.3 }}
+//             className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight"
+//           >
+//             Handpicked
+//             <span className="block mt-2 text-gray-400 dark:text-gray-600">
+//               Excellence
+//             </span>
+//           </motion.h2>
+
+//           <motion.p
+//             initial={{ opacity: 0, y: 20 }}
+//             animate={isInView ? { opacity: 1, y: 0 } : {}}
+//             transition={{ duration: 0.8, delay: 0.4 }}
+//             className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed"
+//           >
+//             Discover our carefully curated selection of premium products, each
+//             chosen for exceptional quality and timeless design.
+//           </motion.p>
+//         </motion.div>
+
+//         {/* Products grid */}
+//         <motion.div
+//           variants={containerVariants}
+//           initial="hidden"
+//           animate={isInView ? 'visible' : 'hidden'}
+//           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+//         >
+//           {featuredProducts.map((product, index) => (
+//             <motion.div
+//               key={product._id || product.id}
+//               variants={itemVariants}
+//               className="group relative"
+//             >
+//               <motion.div
+//                 whileHover={{ y: -8 }}
+//                 transition={{ duration: 0.3 }}
+//                 className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden hover:border-gray-900 dark:hover:border-white hover:shadow-2xl transition-all duration-500"
+//               >
+//                 {/* Image */}
+//                 <div className="relative h-80 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
+//                   {/* Stock badge */}
+//                   <motion.div
+//                     initial={{ x: -100, opacity: 0 }}
+//                     animate={{ x: 0, opacity: 1 }}
+//                     transition={{ delay: 0.2 + index * 0.1 }}
+//                     className="absolute top-4 left-4 z-20"
+//                   >
+//                     {product.quantity > 0 ? (
+//                       <div className="bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold">
+//                         In Stock · {product.quantity}
+//                       </div>
+//                     ) : (
+//                       <div className="bg-gray-800 dark:bg-gray-300 text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold">
+//                         Out of Stock
+//                       </div>
+//                     )}
+//                   </motion.div>
+
+//                   {/* Featured star */}
+//                   <motion.div
+//                     initial={{ scale: 0, rotate: -180 }}
+//                     animate={{ scale: 1, rotate: 0 }}
+//                     transition={{
+//                       delay: 0.3 + index * 0.1,
+//                       type: 'spring',
+//                     }}
+//                     className="absolute top-4 right-4 z-20"
+//                   >
+//                     <div className="bg-gray-900 dark:bg-gray-100 p-2.5 rounded-full shadow-lg">
+//                       <FiStar className="w-4 h-4 text-white dark:text-black fill-current" />
+//                     </div>
+//                   </motion.div>
+
+//                   <Link href={`/products/${product.slug}`}>
+//                     <motion.img
+//                       src={product.images?.[0] || '/images/placeholder.jpg'}
+//                       alt={product.name}
+//                       className="w-full h-full object-cover cursor-pointer"
+//                       whileHover={{ scale: 1.1 }}
+//                       transition={{ duration: 0.6 }}
+//                     />
+//                   </Link>
+
+//                   {/* Hover actions */}
+//                   <motion.div
+//                     initial={{ opacity: 0 }}
+//                     whileHover={{ opacity: 1 }}
+//                     className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end justify-center pb-6 gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+//                   >
+//                     <motion.button
+//                       whileHover={{ scale: 1.15, rotate: 5 }}
+//                       whileTap={{ scale: 0.9 }}
+//                       className="bg-white text-black p-3 rounded-2xl shadow-xl hover:bg-gray-200 transition-colors"
+//                       title="Quick View"
+//                     >
+//                       <FiEye className="w-5 h-5" />
+//                     </motion.button>
+
+//                     <motion.button
+//                       whileHover={{ scale: 1.15, rotate: -5 }}
+//                       whileTap={{ scale: 0.9 }}
+//                       className="bg-white text-black p-3 rounded-2xl shadow-xl hover:bg-gray-200 transition-colors"
+//                       title="Add to Wishlist"
+//                     >
+//                       <FiHeart className="w-5 h-5" />
+//                     </motion.button>
+
+//                     <motion.button
+//                       whileHover={{ scale: 1.15 }}
+//                       whileTap={{ scale: 0.9 }}
+//                       className="bg-black text-white p-3 rounded-2xl shadow-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+//                       title="Add to Cart"
+//                       disabled={product.quantity === 0}
+//                     >
+//                       <FiShoppingCart className="w-5 h-5" />
+//                     </motion.button>
+//                   </motion.div>
+//                 </div>
+
+//                 {/* Text content */}
+//                 <div className="p-6">
+//                   <div className="flex items-center justify-between mb-3">
+//                     <span className="text-xs text-gray-500 dark:text-gray-500 font-bold uppercase tracking-widest">
+//                       {product.category || 'Uncategorized'}
+//                     </span>
+//                     <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
+//                       <FiStar className="w-3.5 h-3.5 text-gray-900 dark:text-white fill-current" />
+//                       <span className="text-xs font-bold text-gray-900 dark:text-white">
+//                         {product.averageRating > 0
+//                           ? product.averageRating.toFixed(1)
+//                           : '5.0'}
+//                       </span>
+//                     </div>
+//                   </div>
+
+//                   <Link href={`/products/${product.slug}`}>
+//                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 hover:text-gray-600 dark:hover:text-gray-400 transition-colors min-h-[3.5rem] cursor-pointer">
+//                       {product.name}
+//                     </h3>
+//                   </Link>
+
+//                   {product.description && (
+//                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 min-h-[2.5rem] leading-relaxed">
+//                       {product.description}
+//                     </p>
+//                   )}
+
+//                   <div className="flex items-center justify-between pt-5 border-t-2 border-gray-200 dark:border-gray-800">
+//                     <p className="text-3xl font-bold text-gray-900 dark:text-white">
+//                       $
+//                       {typeof product.price === 'number'
+//                         ? product.price.toFixed(2)
+//                         : '0.00'}
+//                     </p>
+
+//                     <Link href={`/products/${product.slug}`}>
+//                       <motion.button
+//                         whileHover={{ scale: 1.05, x: 3 }}
+//                         whileTap={{ scale: 0.95 }}
+//                         className="group/btn bg-black dark:bg-white text-white dark:text-black px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+//                       >
+//                         View
+//                         <FiArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+//                       </motion.button>
+//                     </Link>
+//                   </div>
+//                 </div>
+
+//                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-gray-100 dark:from-gray-800 to-transparent opacity-50 rounded-tr-full" />
+//               </motion.div>
+
+//               <div className="absolute inset-0 -z-10 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-900 rounded-3xl blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
+//             </motion.div>
+//           ))}
+//         </motion.div>
+
+//         {/* View all button */}
+//         <motion.div
+//           initial={{ opacity: 0, y: 40 }}
+//           animate={isInView ? { opacity: 1, y: 0 } : {}}
+//           transition={{ duration: 0.8, delay: 0.8 }}
+//           className="text-center mt-20"
+//         >
+//           <Link href="/products">
+//             <motion.button
+//               whileHover={{ scale: 1.05, y: -4 }}
+//               whileTap={{ scale: 0.95 }}
+//               className="group relative inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black px-12 py-5 rounded-2xl font-bold text-lg shadow-2xl overflow-hidden"
+//             >
+//               <span className="relative z-10 flex items-center gap-3">
+//                 Explore All Products
+//                 <motion.span
+//                   animate={{ x: [0, 5, 0] }}
+//                   transition={{ duration: 1.5, repeat: Infinity }}
+//                 >
+//                   <FiArrowRight className="w-5 h-5" />
+//                 </motion.span>
+//               </span>
+//               <motion.div
+//                 className="absolute inset-0 bg-gray-800 dark:bg-gray-200"
+//                 initial={{ x: '-100%' }}
+//                 whileHover={{ x: 0 }}
+//                 transition={{ duration: 0.3 }}
+//               />
+//             </motion.button>
+//           </Link>
+//         </motion.div>
+//       </div>
+//     </section>
+//   );
+// }
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { useProductStore } from '@/lib/store';
-import {
-  FiShoppingCart,
-  FiHeart,
-  FiEye,
-  FiStar,
-  FiPackage,
-  FiArrowRight,
-  FiZap,
-} from 'react-icons/fi';
+import { FiShoppingCart } from 'react-icons/fi';
 
 export default function FeaturedProducts() {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [activeCategory, setActiveCategory] = useState('All Products');
 
-  // We only read products + loading.
-  // fetchProducts is now called from HomePage, not here.
   const { products, isLoading } = useProductStore();
 
-  // When products change, recompute featured products
+  // Debug: Log products to see what's happening
+  useEffect(() => {
+    console.log('🔍 Products from store:', products);
+    console.log('🔍 isLoading:', isLoading);
+  }, [products, isLoading]);
+
   useEffect(() => {
     if (!Array.isArray(products) || products.length === 0) {
       setFeaturedProducts([]);
       return;
     }
 
-    // Prefer products explicitly marked as featured
     let featured = products.filter(
       (p) => p?.featured === true || p?.featured === 'true' || p?.featured === 1
     );
 
-    // If none are marked, fallback to first 4 products
     if (featured.length === 0) {
-      console.warn(
-        '[FeaturedProducts] No products have "featured" flag set. Showing first 4 products as fallback.'
-      );
-      featured = products.slice(0, 4);
+      console.log('⚠️ No featured products found, using first 8');
+      featured = products.slice(0, 8);
     }
 
+    console.log('✅ Featured products set:', featured.length);
     setFeaturedProducts(featured);
   }, [products]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
+  const categories = ['All Products', 'Vegetables', 'Fruits', 'Bread', 'Meat'];
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 60, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-    },
-  };
+  const filteredProducts =
+    activeCategory === 'All Products'
+      ? featuredProducts
+      : featuredProducts.filter(
+          (p) => p.category?.toLowerCase() === activeCategory.toLowerCase()
+        );
 
-  const floatingAnimation = {
-    y: [0, -10, 0],
-    transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-  };
+  console.log('📦 Filtered products:', filteredProducts.length);
 
-  /* ----------------- LOADING SKELETON ----------------- */
   if (isLoading) {
     return (
-      <section className="py-24 bg-white dark:bg-black relative overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-20">
-            <div className="h-12 w-72 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 rounded-2xl mx-auto mb-6 animate-pulse" />
-            <div className="h-6 w-full max-w-[500px] bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 rounded-xl mx-auto animate-pulse" />
+      <section className="relative py-16 md:py-24 bg-gray-50 z-20">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="h-10 w-64 bg-gray-200 rounded mx-auto mb-8 animate-pulse" />
+            <div className="flex flex-wrap justify-center gap-3 mb-8">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="h-10 w-32 bg-gray-200 rounded-full animate-pulse"
+                />
+              ))}
+            </div>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="group relative">
-                <div className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden">
-                  <div className="h-80 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 animate-pulse" />
-                  <div className="p-6 space-y-4">
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                    <div className="h-6 w-full bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                    <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                    <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-md">
+                <div className="h-56 bg-gray-200 animate-pulse" />
+                <div className="p-5 space-y-3">
+                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-6 w-full bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
+                  <div className="flex items-center justify-between pt-3">
+                    <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-10 w-32 bg-gray-200 rounded-full animate-pulse" />
                   </div>
                 </div>
               </div>
@@ -739,293 +1118,136 @@ export default function FeaturedProducts() {
     );
   }
 
-  /* ----------------- EMPTY STATE ----------------- */
   if (!featuredProducts || featuredProducts.length === 0) {
     return (
-      <section className="py-24 bg-white dark:bg-black relative overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center max-w-2xl mx-auto"
-          >
-            <motion.div
-              animate={floatingAnimation}
-              className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 rounded-3xl mb-8"
-            >
-              <FiPackage className="w-12 h-12 text-gray-600 dark:text-gray-400" />
-            </motion.div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              Featured Products
+      <section className="relative py-16 md:py-24 bg-gray-50 z-20">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+              Our Organic Products
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 leading-relaxed">
-              No featured products available at the moment. Check back soon for our latest curated collection!
+            <p className="text-gray-600 mb-8">
+              No products available at the moment. Please check back later.
             </p>
-            <Link href="/products">
-              <motion.button
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                className="group inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-2xl transition-all duration-300"
-              >
-                Browse All Products
-                <FiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
-            </Link>
-          </motion.div>
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded">
+              Debug: Products array is empty or not loaded
+            </div>
+          </div>
         </div>
       </section>
     );
   }
 
-  /* ----------------- MAIN GRID ----------------- */
   return (
-    <section
-      ref={sectionRef}
-      className="py-24 bg-white dark:bg-black relative z-10 overflow-hidden"
-    >
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 8, repeat: Infinity }}
-        className="absolute top-0 right-1/4 w-96 h-96 bg-gray-300 dark:bg-gray-700 rounded-full blur-3xl opacity-30"
-      />
-      <motion.div
-        animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
-        transition={{ duration: 10, repeat: Infinity }}
-        className="absolute bottom-0 left-1/4 w-96 h-96 bg-gray-400 dark:bg-gray-600 rounded-full blur-3xl opacity-20"
-      />
+    <section ref={sectionRef} className="relative py-16 md:py-24 bg-gray-50 z-20">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-8">
+            Our Organic Products
+          </h2>
 
-      <div className="container mx-auto px-4 relative z-10">
-        {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="text-center mb-20"
-        >
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={isInView ? { scale: 1, rotate: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.2, type: 'spring' }}
-            className="inline-block mb-6"
-          >
-            <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 rounded-full text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-              <FiZap className="w-4 h-4" />
-              Featured Collection
-            </span>
-          </motion.div>
-
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight"
-          >
-            Handpicked
-            <span className="block mt-2 text-gray-400 dark:text-gray-600">
-              Excellence
-            </span>
-          </motion.h2>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed"
-          >
-            Discover our carefully curated selection of premium products, each
-            chosen for exceptional quality and timeless design.
-          </motion.p>
-        </motion.div>
-
-        {/* Products grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          {featuredProducts.map((product, index) => (
-            <motion.div
-              key={product._id || product.id}
-              variants={itemVariants}
-              className="group relative"
-            >
-              <motion.div
-                whileHover={{ y: -8 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden hover:border-gray-900 dark:hover:border-white hover:shadow-2xl transition-all duration-500"
+          {/* Category Tabs */}
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => {
+                  console.log('🔘 Category clicked:', category);
+                  setActiveCategory(category);
+                }}
+                className={`px-6 py-2.5 rounded-full font-medium text-sm md:text-base transition-all duration-300 ${
+                  activeCategory === category
+                    ? 'bg-yellow-400 text-gray-800 shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
               >
-                {/* Image */}
-                <div className="relative h-80 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
-                  {/* Stock badge */}
-                  <motion.div
-                    initial={{ x: -100, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 + index * 0.1 }}
-                    className="absolute top-4 left-4 z-20"
-                  >
-                    {product.quantity > 0 ? (
-                      <div className="bg-black dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold">
-                        In Stock · {product.quantity}
-                      </div>
-                    ) : (
-                      <div className="bg-gray-800 dark:bg-gray-300 text-white dark:text-black px-3 py-1.5 rounded-full text-xs font-bold">
-                        Out of Stock
-                      </div>
-                    )}
-                  </motion.div>
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
 
-                  {/* Featured star */}
-                  <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{
-                      delay: 0.3 + index * 0.1,
-                      type: 'spring',
-                    }}
-                    className="absolute top-4 right-4 z-20"
-                  >
-                    <div className="bg-gray-900 dark:bg-gray-100 p-2.5 rounded-full shadow-lg">
-                      <FiStar className="w-4 h-4 text-white dark:text-black fill-current" />
-                    </div>
-                  </motion.div>
-
-                  <Link href={`/products/${product.slug}`}>
-                    <motion.img
-                      src={product.images?.[0] || '/images/placeholder.jpg'}
-                      alt={product.name}
-                      className="w-full h-full object-cover cursor-pointer"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.6 }}
-                    />
-                  </Link>
-
-                  {/* Hover actions */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end justify-center pb-6 gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  >
-                    <motion.button
-                      whileHover={{ scale: 1.15, rotate: 5 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="bg-white text-black p-3 rounded-2xl shadow-xl hover:bg-gray-200 transition-colors"
-                      title="Quick View"
-                    >
-                      <FiEye className="w-5 h-5" />
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.15, rotate: -5 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="bg-white text-black p-3 rounded-2xl shadow-xl hover:bg-gray-200 transition-colors"
-                      title="Add to Wishlist"
-                    >
-                      <FiHeart className="w-5 h-5" />
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.15 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="bg-black text-white p-3 rounded-2xl shadow-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Add to Cart"
-                      disabled={product.quantity === 0}
-                    >
-                      <FiShoppingCart className="w-5 h-5" />
-                    </motion.button>
-                  </motion.div>
+        {/* Products Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {filteredProducts.slice(0, 8).map((product, index) => (
+            <div
+              key={product._id || product.id}
+              style={{ opacity: 1, visibility: 'visible' }}
+              className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border-2 border-gray-100 hover:border-yellow-400 relative z-10"
+            >
+              {/* Image Container */}
+              <div className="relative h-56 overflow-hidden bg-gray-100">
+                {/* Category Badge */}
+                <div className="absolute top-4 left-4 z-10">
+                  <span className="bg-yellow-400 text-gray-800 px-4 py-1.5 rounded-full text-sm font-semibold">
+                    {product.category || 'Fruits'}
+                  </span>
                 </div>
 
-                {/* Text content */}
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs text-gray-500 dark:text-gray-500 font-bold uppercase tracking-widest">
-                      {product.category || 'Uncategorized'}
-                    </span>
-                    <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
-                      <FiStar className="w-3.5 h-3.5 text-gray-900 dark:text-white fill-current" />
-                      <span className="text-xs font-bold text-gray-900 dark:text-white">
-                        {product.averageRating > 0
-                          ? product.averageRating.toFixed(1)
-                          : '5.0'}
-                      </span>
-                    </div>
-                  </div>
+                <Link href={`/products/${product.slug || product._id}`}>
+                  <img
+                    src={product.images?.[0] || '/images/placeholder.jpg'}
+                    alt={product.name || 'Product'}
+                    className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
+                    onError={(e) => {
+                      console.error('Image failed to load:', product.images?.[0]);
+                      e.target.src = '/images/placeholder.jpg';
+                    }}
+                  />
+                </Link>
+              </div>
 
-                  <Link href={`/products/${product.slug}`}>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 hover:text-gray-600 dark:hover:text-gray-400 transition-colors min-h-[3.5rem] cursor-pointer">
-                      {product.name}
-                    </h3>
-                  </Link>
+              {/* Content */}
+              <div className="p-5">
+                <Link href={`/products/${product.slug || product._id}`}>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2 hover:text-yellow-600 transition-colors cursor-pointer line-clamp-1">
+                    {product.name || 'Unnamed Product'}
+                  </h3>
+                </Link>
 
-                  {product.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 min-h-[2.5rem] leading-relaxed">
-                      {product.description}
-                    </p>
-                  )}
+                <p className="text-gray-500 text-sm mb-4 line-clamp-2 min-h-[2.5rem]">
+                  {product.description ||
+                    'Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt'}
+                </p>
 
-                  <div className="flex items-center justify-between pt-5 border-t-2 border-gray-200 dark:border-gray-800">
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                {/* Price and Add to Cart */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <div>
+                    <span className="text-2xl font-bold text-gray-800">
                       $
                       {typeof product.price === 'number'
                         ? product.price.toFixed(2)
-                        : '0.00'}
-                    </p>
-
-                    <Link href={`/products/${product.slug}`}>
-                      <motion.button
-                        whileHover={{ scale: 1.05, x: 3 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="group/btn bg-black dark:bg-white text-white dark:text-black px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-                      >
-                        View
-                        <FiArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                      </motion.button>
-                    </Link>
+                        : '4.99'}
+                    </span>
+                    <span className="text-gray-500 text-sm ml-1">/ kg</span>
                   </div>
+
+                  <button
+                    onClick={() => console.log('🛒 Add to cart:', product.name)}
+                    className="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-semibold px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={product.quantity === 0}
+                  >
+                    <FiShoppingCart className="w-4 h-4" />
+                    Add to cart
+                  </button>
                 </div>
-
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-gray-100 dark:from-gray-800 to-transparent opacity-50 rounded-tr-full" />
-              </motion.div>
-
-              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-900 rounded-3xl blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
-            </motion.div>
+              </div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* View all button */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.8 }}
-          className="text-center mt-20"
-        >
-          <Link href="/products">
-            <motion.button
-              whileHover={{ scale: 1.05, y: -4 }}
-              whileTap={{ scale: 0.95 }}
-              className="group relative inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black px-12 py-5 rounded-2xl font-bold text-lg shadow-2xl overflow-hidden"
-            >
-              <span className="relative z-10 flex items-center gap-3">
-                Explore All Products
-                <motion.span
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  <FiArrowRight className="w-5 h-5" />
-                </motion.span>
-              </span>
-              <motion.div
-                className="absolute inset-0 bg-gray-800 dark:bg-gray-200"
-                initial={{ x: '-100%' }}
-                whileHover={{ x: 0 }}
-                transition={{ duration: 0.3 }}
-              />
-            </motion.button>
-          </Link>
-        </motion.div>
+        {/* Debug Info - Remove this after fixing */}
+        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded text-sm">
+          <strong>Debug Info:</strong>
+          <ul className="mt-2 space-y-1">
+            <li>Total products in store: {products?.length || 0}</li>
+            <li>Featured products: {featuredProducts.length}</li>
+            <li>Filtered products: {filteredProducts.length}</li>
+            <li>Active category: {activeCategory}</li>
+            <li>Loading: {isLoading ? 'Yes' : 'No'}</li>
+          </ul>
+        </div>
       </div>
     </section>
   );
