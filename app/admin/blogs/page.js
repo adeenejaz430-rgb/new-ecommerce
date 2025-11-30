@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, message, Popconfirm } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import BlogForm from './BlogForm';
+// import BlogForm from './BlogForm';
 
 export default function BlogsAdmin() {
   const [blogs, setBlogs] = useState([]);
