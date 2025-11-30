@@ -1034,23 +1034,24 @@
 
 import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { motion, useInView } from 'framer-motion';
-import { useProductStore } from '@/lib/store';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useProductStore, useCartStore } from '@/lib/store';
 import { FiShoppingCart } from 'react-icons/fi';
+import { message } from 'antd';
+import Image from 'next/image';
 
 export default function FeaturedProducts() {
+  const { data: session } = useSession();
+  const isAuthed = !!(session && session.user);
+  const router = useRouter();
+  
   const sectionRef = useRef(null);
-  const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [activeCategory, setActiveCategory] = useState('All Products');
 
   const { products, isLoading } = useProductStore();
-
-  // Debug: Log products to see what's happening
-  useEffect(() => {
-    console.log('🔍 Products from store:', products);
-    console.log('🔍 isLoading:', isLoading);
-  }, [products, isLoading]);
+  const { addItem: addToCart } = useCartStore();
 
   useEffect(() => {
     if (!Array.isArray(products) || products.length === 0) {
@@ -1063,13 +1064,35 @@ export default function FeaturedProducts() {
     );
 
     if (featured.length === 0) {
-      console.log('⚠️ No featured products found, using first 8');
       featured = products.slice(0, 8);
     }
 
-    console.log('✅ Featured products set:', featured.length);
     setFeaturedProducts(featured);
   }, [products]);
+
+  const handleAddToCart = (product) => {
+    if (!isAuthed) {
+      message.info('Please sign in to continue');
+      router.push('/login');
+      return;
+    }
+
+    const stockQty = typeof product.quantity === 'number' ? product.quantity : 0;
+    
+    if (stockQty === 0) {
+      message.error('Product is out of stock');
+      return;
+    }
+
+    const normalizedProduct = {
+      ...product,
+      id: product._id || product.id,
+      quantity: 1,
+    };
+
+    addToCart(normalizedProduct);
+    message.success(`${product.name} added to cart!`);
+  };
 
   const categories = ['All Products', 'Vegetables', 'Fruits', 'Bread', 'Meat'];
 
@@ -1080,11 +1103,9 @@ export default function FeaturedProducts() {
           (p) => p.category?.toLowerCase() === activeCategory.toLowerCase()
         );
 
-  console.log('📦 Filtered products:', filteredProducts.length);
-
   if (isLoading) {
     return (
-      <section className="relative py-16 md:py-24 bg-gray-50 z-20">
+      <section className="relative py-16 md:py-24 bg-gray-50">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="h-10 w-64 bg-gray-200 rounded mx-auto mb-8 animate-pulse" />
@@ -1120,18 +1141,15 @@ export default function FeaturedProducts() {
 
   if (!featuredProducts || featuredProducts.length === 0) {
     return (
-      <section className="relative py-16 md:py-24 bg-gray-50 z-20">
+      <section className="relative py-16 md:py-24 bg-gray-50">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-              Our Organic Products
+              Featured Products
             </h2>
             <p className="text-gray-600 mb-8">
               No products available at the moment. Please check back later.
             </p>
-            <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded">
-              Debug: Products array is empty or not loaded
-            </div>
           </div>
         </div>
       </section>
@@ -1139,12 +1157,12 @@ export default function FeaturedProducts() {
   }
 
   return (
-    <section ref={sectionRef} className="relative py-16 md:py-24 bg-gray-50 z-20">
+    <section ref={sectionRef} className="relative py-16 md:py-24 bg-gray-50">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-8">
-            Our Organic Products
+            Featured Products
           </h2>
 
           {/* Category Tabs */}
@@ -1152,14 +1170,11 @@ export default function FeaturedProducts() {
             {categories.map((category) => (
               <button
                 key={category}
-                onClick={() => {
-                  console.log('🔘 Category clicked:', category);
-                  setActiveCategory(category);
-                }}
+                onClick={() => setActiveCategory(category)}
                 className={`px-6 py-2.5 rounded-full font-medium text-sm md:text-base transition-all duration-300 ${
                   activeCategory === category
-                    ? 'bg-yellow-400 text-gray-800 shadow-md'
-                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border-2 border-green-200'
                 }`}
               >
                 {category}
@@ -1170,85 +1185,109 @@ export default function FeaturedProducts() {
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredProducts.slice(0, 8).map((product, index) => (
-            <div
-              key={product._id || product.id}
-              style={{ opacity: 1, visibility: 'visible' }}
-              className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border-2 border-gray-100 hover:border-yellow-400 relative z-10"
-            >
-              {/* Image Container */}
-              <div className="relative h-56 overflow-hidden bg-gray-100">
-                {/* Category Badge */}
-                <div className="absolute top-4 left-4 z-10">
-                  <span className="bg-yellow-400 text-gray-800 px-4 py-1.5 rounded-full text-sm font-semibold">
-                    {product.category || 'Fruits'}
-                  </span>
-                </div>
+          {filteredProducts.slice(0, 8).map((product) => {
+            const stockQty = typeof product.quantity === 'number' ? product.quantity : 0;
 
-                <Link href={`/products/${product.slug || product._id}`}>
-                  <img
-                    src={product.images?.[0] || '/images/placeholder.jpg'}
-                    alt={product.name || 'Product'}
-                    className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
-                    onError={(e) => {
-                      console.error('Image failed to load:', product.images?.[0]);
-                      e.target.src = '/images/placeholder.jpg';
-                    }}
-                  />
-                </Link>
-              </div>
-
-              {/* Content */}
-              <div className="p-5">
-                <Link href={`/products/${product.slug || product._id}`}>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2 hover:text-yellow-600 transition-colors cursor-pointer line-clamp-1">
-                    {product.name || 'Unnamed Product'}
-                  </h3>
-                </Link>
-
-                <p className="text-gray-500 text-sm mb-4 line-clamp-2 min-h-[2.5rem]">
-                  {product.description ||
-                    'Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt'}
-                </p>
-
-                {/* Price and Add to Cart */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <div>
-                    <span className="text-2xl font-bold text-gray-800">
-                      $
-                      {typeof product.price === 'number'
-                        ? product.price.toFixed(2)
-                        : '4.99'}
+            return (
+              <div
+                key={product._id || product.id}
+                className="bg-white border-2 border-green-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
+              >
+                {/* Image Container */}
+                <div className="relative h-56 overflow-hidden bg-gray-50 group">
+                  {/* Category Badge */}
+                  <div className="absolute top-4 right-4 z-10">
+                    <span className="bg-green-500 text-white px-4 py-1.5 rounded-full text-xs font-semibold">
+                      {product.category || 'Fruits'}
                     </span>
-                    <span className="text-gray-500 text-sm ml-1">/ kg</span>
                   </div>
 
-                  <button
-                    onClick={() => console.log('🛒 Add to cart:', product.name)}
-                    className="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-semibold px-5 py-2.5 rounded-full transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={product.quantity === 0}
-                  >
-                    <FiShoppingCart className="w-4 h-4" />
-                    Add to cart
-                  </button>
+                  <Link href={`/products/${product.slug || product._id}`}>
+                    <Image
+                      src={product.images?.[0] || '/images/placeholder.jpg'}
+                      alt={product.name || 'Product'}
+                      fill
+                      className="object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.src = '/images/placeholder.jpg';
+                      }}
+                    />
+                  </Link>
+                </div>
+
+                {/* Content */}
+                <div className="p-5 flex-1 flex flex-col">
+                  <Link href={`/products/${product.slug || product._id}`}>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2 hover:text-green-600 transition-colors cursor-pointer line-clamp-1">
+                      {product.name || 'Unnamed Product'}
+                    </h3>
+                  </Link>
+
+                  <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-1 min-h-[2.5rem]">
+                    {product.description ||
+                      'Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt'}
+                  </p>
+
+                  {/* Price and Add to Cart */}
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                    <div>
+                      <span className="text-2xl font-bold text-gray-800">
+                        $
+                        {typeof product.price === 'number'
+                          ? product.price.toFixed(2)
+                          : '4.99'}
+                      </span>
+                      <span className="text-gray-500 text-sm ml-1"></span>
+                    </div>
+<button
+  onClick={() => handleAddToCart(product)}
+  disabled={stockQty === 0}
+  className={`
+    group
+    px-5 py-2.5 rounded-full
+    font-semibold flex items-center gap-2
+    border border-yellow-400
+    transition-all duration-300 shadow-sm cursor-pointer
+    disabled:bg-gray-300 disabled:text-gray-600 disabled:border-gray-300 disabled:cursor-not-allowed
+
+    ${stockQty === 0 
+      ? '' 
+      : 'bg-white text-green-600 hover:bg-yellow-400 hover:text-white'}
+  `}
+>
+  <FiShoppingCart
+    className={`
+      w-4 h-4 
+      transition-all duration-300
+      ${stockQty === 0 ? '' : 'text-green-600 group-hover:text-white'}
+    `}
+  />
+  
+  {stockQty === 0 ? 'Out of Stock' : 'Add to cart'}
+</button>
+
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Debug Info - Remove this after fixing */}
-        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded text-sm">
-          <strong>Debug Info:</strong>
-          <ul className="mt-2 space-y-1">
-            <li>Total products in store: {products?.length || 0}</li>
-            <li>Featured products: {featuredProducts.length}</li>
-            <li>Filtered products: {filteredProducts.length}</li>
-            <li>Active category: {activeCategory}</li>
-            <li>Loading: {isLoading ? 'Yes' : 'No'}</li>
-          </ul>
+            );
+          })}
         </div>
       </div>
+
+      <style jsx>{`
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </section>
   );
 }

@@ -66,185 +66,149 @@ import Link from 'next/link';
 import { useProductStore } from '@/lib/store';
 import FeaturedProducts from '@/components/shared/FeaturedProducts';
 import NewsletterSection from '@/components/shared/NewsletterSection';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import RecentProduct from '@/components/shared/recentProduct';
+import HeroSlider from '@/components/shared/heroSection';
+import SectionLast from '@/components/shared/sectionlast';
+import SectionMid from '@/components/shared/sectionmid';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const heroSlides = [
   {
     id: 1,
-    image: '/hero-fruits-1.jpg', // Replace with your fruit basket images
-    title: 'Fruits',
+    image: '/homeimage1.png',
+    title: 'Elevate Interiors',
+    subtitle: 'with Quality & Style',
+    description: 'Since 2015, Golden Rugs has been a trusted wholesale supplier of premium rugs and curated furniture, including dining sets, coffee tables, mirrors, and more. We deliver quality, affordability, and timeless design for retailers.',
   },
   {
     id: 2,
-    image: '/hero-fruits-2.jpg',
-    title: 'Vegetables',
+    image: '/homeimage2.png',
+    title: 'Transform Your Home',
+    subtitle: 'with Modern Elegance',
+    description: 'Discover handcrafted furniture and décor that define comfort and luxury. Shop dining sets, coffee tables, and more for your perfect space.',
   },
   {
     id: 3,
-    image: '/hero-fruits-3.jpg',
-    title: 'Organic',
+    image: '/homeimage3.png',
+    title: 'Crafted to Inspire',
+    subtitle: 'Every Space',
+    description: 'Explore our wide range of designs, from bold modern styles to timeless classics — made for retailers who value excellence.',
   },
 ];
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
   const fetchProducts = useProductStore((state) => state.fetchProducts);
 
-  // Fetch products on mount
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Auto-slide
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(timer);
   }, []);
 
-  const handlePrevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
-  };
-
-  const handleNextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Implement search functionality
-    console.log('Searching for:', searchQuery);
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
   };
 
   return (
     <div className="w-full">
-      {/* ===== HERO SECTION ===== */}
-      <section className="relative min-h-[600px] lg:min-h-[700px] w-full bg-gradient-to-br from-orange-50 via-yellow-50 to-green-50 overflow-hidden">
-        {/* Background Pattern/Overlay */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-green-400 rounded-full blur-3xl"></div>
-          <div className="absolute top-40 right-20 w-40 h-40 bg-orange-400 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 left-1/4 w-36 h-36 bg-yellow-400 rounded-full blur-3xl"></div>
-        </div>
+      {/* ===== HERO SLIDER SECTION ===== */}
+      <section className="relative h-[600px] md:h-[700px] lg:h-[800px] w-full overflow-hidden">
+        <AnimatePresence mode="wait">
+          {heroSlides.map(
+            (slide, index) =>
+              index === currentSlide && (
+                <motion.div
+                  key={slide.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1 }}
+                  className="absolute inset-0"
+                >
+                  {/* Background Image with Overlay */}
+                  <div className="absolute inset-0">
+                    <img
+                      src={slide.image}
+                      alt={slide.title}
+                      className="w-full h-full object-cover object-center"
+                    />
+                    {/* Dark overlay for better text readability */}
+                    <div className="absolute inset-0 bg-black/40"></div>
+                  </div>
 
-        <div className="container mx-auto px-4 py-12 lg:py-16 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left Content */}
-            <div className="text-left space-y-6 lg:space-y-8">
-              {/* Badge */}
-              <div className="inline-block">
-                <span className="text-orange-500 font-semibold text-lg tracking-wide">
-                  100% Organic Foods
-                </span>
-              </div>
+                  {/* Content Overlay */}
+                  <div className="relative h-full flex items-center">
+                    <div className="container mx-auto px-4 md:px-8 lg:px-16">
+                      <div className="max-w-3xl">
+                        <motion.h1
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3, duration: 0.8 }}
+                          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-4"
+                        >
+                          {slide.title}
+                          <br />
+                          <span className="text-yellow-400">{slide.subtitle}</span>
+                        </motion.h1>
 
-              {/* Main Heading */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
-                <span className="text-green-600">Organic</span>{' '}
-                <span className="text-gray-800">Veggies &</span>
-                <br />
-                <span className="text-gray-800">Fruits Foods</span>
-              </h1>
+                        <motion.p
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5, duration: 0.8 }}
+                          className="text-base sm:text-lg md:text-xl text-white/90 mb-8 leading-relaxed max-w-2xl"
+                        >
+                          {slide.description}
+                        </motion.p>
 
-              {/* Search Bar */}
-              <form onSubmit={handleSearch} className="relative max-w-xl">
-                <div className="flex items-center bg-white rounded-full shadow-lg overflow-hidden border-2 border-gray-100">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search"
-                    className="flex-1 px-6 py-4 text-gray-700 outline-none text-base"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-4 transition-colors"
-                  >
-                    Submit Now
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Right Image Carousel */}
-            <div className="relative">
-              {/* Main Image Container with Card Design */}
-              <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden border-8 border-white max-w-md mx-auto lg:max-w-lg">
-                {/* Image Slider */}
-                <div className="relative h-[400px] lg:h-[500px] bg-gradient-to-br from-orange-200 to-yellow-200">
-                  {heroSlides.map((slide, index) => (
-                    <div
-                      key={slide.id}
-                      className={`absolute inset-0 transition-opacity duration-700 ${
-                        index === currentSlide ? 'opacity-100' : 'opacity-0'
-                      }`}
-                    >
-                      <img
-                        src={slide.image}
-                        alt={slide.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-
-                  {/* Bottom Label */}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-                    <div className="bg-white px-8 py-3 rounded-full shadow-lg">
-                      <span className="text-gray-800 font-bold text-lg">
-                        {heroSlides[currentSlide].title}
-                      </span>
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.7, duration: 0.8 }}
+                        >
+                          <Link
+                            href="/products"
+                            className="inline-block bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-8 py-4 rounded-md text-base sm:text-lg uppercase transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:-translate-y-1"
+                          >
+                            Explore Now
+                          </Link>
+                        </motion.div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
+              )
+          )}
+        </AnimatePresence>
 
-                {/* Navigation Arrows */}
-                <button
-                  onClick={handlePrevSlide}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 p-3 rounded-full shadow-lg transition-all z-10"
-                  aria-label="Previous slide"
-                >
-                  <FiChevronLeft className="w-6 h-6" />
-                </button>
-
-                <button
-                  onClick={handleNextSlide}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-800 p-3 rounded-full shadow-lg transition-all z-10"
-                  aria-label="Next slide"
-                >
-                  <FiChevronRight className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Decorative Elements */}
-              <div className="absolute -top-6 -right-6 w-24 h-24 bg-orange-300 rounded-full opacity-50 blur-xl"></div>
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-green-300 rounded-full opacity-50 blur-xl"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 w-full">
-          <svg
-            viewBox="0 0 1440 120"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-full"
-          >
-            <path
-              d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
-              fill="#F9FAFB"
+        {/* Navigation Dots */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`transition-all duration-300 ${
+                index === currentSlide
+                  ? 'w-12 h-3 bg-yellow-400 rounded-full'
+                  : 'w-3 h-3 bg-white/50 rounded-full hover:bg-white/80'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
             />
-          </svg>
+          ))}
         </div>
       </section>
 
-      {/* ===== Featured Products Section ===== */}
+      {/* ===== REST OF THE SECTIONS ===== */}
       <FeaturedProducts />
-
-      {/* ===== Newsletter Section ===== */}
-      <NewsletterSection />
+      <SectionMid />
+      <RecentProduct />
+      <HeroSlider />
+      <SectionLast />
     </div>
   );
 }

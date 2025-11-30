@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FiFilter, FiGrid, FiList, FiHeart, FiShoppingCart, FiRefreshCw } from 'react-icons/fi';
+import { FiFilter, FiGrid, FiList, FiHeart, FiShoppingCart, FiRefreshCw, FiX, FiStar } from 'react-icons/fi';
 import { useCartStore, useWishlistStore } from '@/lib/store';
 import { message } from 'antd';
 
@@ -27,7 +27,6 @@ export default function ProductsPage() {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [sortBy, setSortBy] = useState('featured');
 
-  // Auth guard wrapper
   const requireAuth = (onAuthed) => {
     if (!isAuthed) {
       message.info('Please sign in to continue');
@@ -37,21 +36,17 @@ export default function ProductsPage() {
     onAuthed();
   };
 
-  // Handlers that respect auth
- const handleAddToCart = async (product) => {
-  requireAuth(() => {
-    // normalize _id → id for consistency
-    const normalizedProduct = {
-      ...product,
-      id: product._id || product.id,
-      quantity: 1
-    };
-
-    addToCart(normalizedProduct);
-    message.success(`${product.name} added to cart!`);
-  });
-};
-
+  const handleAddToCart = async (product) => {
+    requireAuth(() => {
+      const normalizedProduct = {
+        ...product,
+        id: product._id || product.id,
+        quantity: 1
+      };
+      addToCart(normalizedProduct);
+      message.success(`${product.name} added to cart!`);
+    });
+  };
 
   const handleAddToWishlist = (product) => {
     requireAuth(() => {
@@ -60,7 +55,6 @@ export default function ProductsPage() {
     });
   };
 
-  // Fetch from API and normalize shape (price as number, ensure quantity exists)
   const fetchProductsFromAPI = async () => {
     setIsLoading(true);
     try {
@@ -81,7 +75,6 @@ export default function ProductsPage() {
         const normalized = data.data.map((p) => ({
           ...p,
           price: typeof p.price === 'number' ? p.price : Number(p.price ?? 0),
-          // always have a numeric quantity; fallback to p.stock if older docs have that
           quantity: typeof p.quantity === 'number'
             ? p.quantity
             : (typeof p.stock === 'number' ? p.stock : 0),
@@ -128,7 +121,7 @@ export default function ProductsPage() {
       case 'price-low-high': result.sort((a, b) => a.price - b.price); break;
       case 'price-high-low': result.sort((a, b) => b.price - a.price); break;
       case 'rating': result.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
-      default: break; // featured
+      default: break;
     }
 
     setFilteredProducts(result);
@@ -148,285 +141,366 @@ export default function ProductsPage() {
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
-  // Use empty wishlist when not authed to prevent "red heart" showing for guests
   const safeWishlistItems = isAuthed ? wishlistItems : [];
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Hero */}
-      <div className="relative bg-gradient-to-r from-blue-900 to-blue-600 h-64 md:h-80">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-blue-500 opacity-20"></div>
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-30"></div>
+      {/* Hero Section - Organic Style */}
+      <div className="relative bg-gradient-to-br from-orange-50 via-yellow-50 to-green-50 py-16 md:py-24 overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-green-400 rounded-full blur-3xl"></div>
+          <div className="absolute top-40 right-20 w-40 h-40 bg-orange-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-1/4 w-36 h-36 bg-yellow-400 rounded-full blur-3xl"></div>
         </div>
-        <div className="relative container mx-auto px-4 h-full flex flex-col justify-center">
-          <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-            className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Our Fountains
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-blue-100 max-w-2xl">
-            Discover our collection of elegant water features for your home and garden
-          </motion.p>
-          <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
-            onClick={handleRefresh} disabled={isLoading}
-            className="mt-6 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
-            <FiRefreshCw className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? 'Loading...' : 'Refresh Products'}
-          </motion.button>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-3xl mx-auto">
+            <span className="text-orange-500 font-semibold text-lg mb-4 block">Fresh & Organic</span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-6">
+              Our Products
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 mb-8">
+              Discover our collection of premium home decor items
+            </p>
+            <button
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-semibold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              <FiRefreshCw className={isLoading ? 'animate-spin' : ''} />
+              {isLoading ? 'Loading...' : 'Refresh Products'}
+            </button>
+          </motion.div>
         </div>
       </div>
 
-      {/* Main */}
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Filters */}
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
-            className={`w-full md:w-64 bg-white rounded-lg shadow-md p-6 ${showFilters ? 'block' : 'hidden md:block'} md:sticky md:top-24 h-fit`}>
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4">Categories</h3>
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <div key={category} className="flex items-center">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar Filters */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className={`lg:w-80 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+            <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
+              {/* Mobile Close Button */}
+              <div className="flex justify-between items-center mb-6 lg:hidden">
+                <h3 className="text-xl font-bold text-gray-800">Filters</h3>
+                <button onClick={() => setShowFilters(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Categories */}
+              <div className="mb-8">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Categories</h3>
+                <div className="space-y-2">
+                  {categories.map((category) => (
                     <button
+                      key={category}
                       onClick={() => setSelectedCategory(category)}
-                      className={`w-full text-left py-1 px-2 rounded ${selectedCategory === category ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}>
+                      className={`w-full text-left px-4 py-3 rounded-xl transition-all font-medium ${
+                        selectedCategory === category
+                          ? 'bg-green-500 text-white shadow-md'
+                          : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                      }`}>
                       {category}
                     </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4">Price Range</h3>
-              <div className="px-2">
-                <div className="flex justify-between mb-2">
-                  <span>${priceRange[0]}</span><span>${priceRange[1]}</span>
+                  ))}
                 </div>
-                <input type="range" min="0" max="1000" step="50" value={priceRange[0]}
-                  onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-                <input type="range" min="0" max="1000" step="50" value={priceRange[1]}
-                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-4" />
               </div>
-            </div>
 
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Sort By</h3>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="featured">Featured</option>
-                <option value="price-low-high">Price: Low to High</option>
-                <option value="price-high-low">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-              </select>
+              {/* Price Range */}
+              <div className="mb-8">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Price Range</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm font-semibold text-gray-700">
+                    <span>${priceRange[0]}</span>
+                    <span>${priceRange[1]}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1000"
+                    step="50"
+                    value={priceRange[0]}
+                    onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
+                    className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                  />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1000"
+                    step="50"
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                    className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                  />
+                </div>
+              </div>
+
+              {/* Sort By */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Sort By</h3>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 bg-gray-50 font-medium text-gray-700">
+                  <option value="featured">Featured</option>
+                  <option value="price-low-high">Price: Low to High</option>
+                  <option value="price-high-low">Price: High to Low</option>
+                  <option value="rating">Highest Rated</option>
+                </select>
+              </div>
             </div>
           </motion.div>
 
-          {/* Products */}
+          {/* Products Grid */}
           <div className="flex-1">
-            {/* Mobile toggles */}
-            <div className="flex justify-between items-center mb-6 md:hidden">
-              <div className="flex items-center space-x-2">
-                <button onClick={handleRefresh} disabled={isLoading}
-                  className="flex items-center space-x-1 bg-blue-500 text-white px-3 py-2 rounded-md shadow-sm disabled:opacity-50">
-                  <FiRefreshCw className={isLoading ? 'animate-spin' : ''} /><span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowFilters(true)}
+                  className="lg:hidden flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl shadow-sm border-2 border-gray-200 hover:border-green-500 transition-colors font-medium">
+                  <FiFilter className="w-4 h-4" />
+                  Filters
                 </button>
-                <button onClick={() => setShowFilters(!showFilters)} className="flex items-center space-x-1 bg-white px-3 py-2 rounded-md shadow-sm">
-                  <FiFilter /><span>Filters</span>
-                </button>
+                <p className="text-gray-600 font-medium">
+                  Showing <span className="text-green-600 font-bold">{filteredProducts.length}</span> of{' '}
+                  <span className="text-gray-800 font-bold">{products.length}</span> products
+                </p>
               </div>
-              <div className="flex space-x-2">
-                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-blue-100 text-blue-700' : 'bg-white'}`}><FiGrid /></button>
-                <button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-blue-100 text-blue-700' : 'bg-white'}`}><FiList /></button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2.5 rounded-xl transition-all ${
+                    viewMode === 'grid'
+                      ? 'bg-green-500 text-white shadow-md'
+                      : 'bg-white text-gray-600 hover:bg-gray-100 border-2 border-gray-200'
+                  }`}>
+                  <FiGrid className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2.5 rounded-xl transition-all ${
+                    viewMode === 'list'
+                      ? 'bg-green-500 text-white shadow-md'
+                      : 'bg-white text-gray-600 hover:bg-gray-100 border-2 border-gray-200'
+                  }`}>
+                  <FiList className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
-            {/* Results info */}
-            <div className="flex justify-between items-center mb-6">
-              <p className="text-gray-600">Showing <span className="font-medium">{filteredProducts.length}</span> of <span className="font-medium">{products.length}</span> products</p>
-              <div className="hidden md:flex space-x-2">
-                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-blue-100 text-blue-700' : 'bg-white'}`}><FiGrid /></button>
-                <button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-blue-100 text-blue-700' : 'bg-white'}`}><FiList /></button>
-              </div>
-            </div>
-
-            {/* Loading */}
+            {/* Loading State */}
             {isLoading && (
-              <div className="flex justify-center items-center h-64">
+              <div className="flex justify-center items-center h-96">
                 <div className="text-center">
-                  <FiRefreshCw className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600">Loading products...</p>
+                  <FiRefreshCw className="animate-spin h-16 w-16 text-green-500 mx-auto mb-4" />
+                  <p className="text-gray-600 font-medium text-lg">Loading fresh products...</p>
                 </div>
               </div>
             )}
 
-            {/* Grid view */}
+            {/* Grid View */}
             {!isLoading && viewMode === 'grid' && (
-              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => {
-                  const stockQty = typeof product.quantity === 'number'
-                    ? product.quantity
-                    : (typeof product.stock === 'number' ? product.stock : 0);
-                  const stockLabel = stockQty > 5 ? 'In Stock' : stockQty > 0 ? 'Low Stock' : 'Out of Stock';
-                  const stockBadgeClass = stockQty > 5
-                    ? 'bg-green-100 text-green-800'
-                    : stockQty > 0
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800';
-
+                  const stockQty = typeof product.quantity === 'number' ? product.quantity : 0;
                   const isInWishlist = safeWishlistItems.some(
                     (item) => (item._id || item.id) === (product._id || product.id)
                   );
 
                   return (
-                    <motion.div key={product._id || product.id} variants={itemVariants} whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                      className="bg-white rounded-lg shadow-md overflow-hidden">
-                      <div className="relative h-64 overflow-hidden group">
-                        <img
-                          src={product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.jpg'}
-                          alt={product.name || 'Product image'}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          onError={(e) => { e.target.onerror = null; e.target.src = '/images/placeholder.jpg'; }}
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <Link href={`/products/${product.slug}`} className="bg-white text-gray-900 px-4 py-2 rounded-md font-medium transform -translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                            View Details
-                          </Link>
+                    <motion.div
+                      key={product._id || product.id}
+                      variants={itemVariants}
+                      whileHover={{ y: -8 }}
+                      transition={{ duration: 0.3 }}
+                      className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-green-400">
+                      {/* Image */}
+                      <div className="relative h-64 overflow-hidden bg-gray-100 group">
+                        <Link href={`/products/${product.slug}`}>
+                          <img
+                            src={product.images?.[0] || '/images/placeholder.jpg'}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e) => { e.target.src = '/images/placeholder.jpg'; }}
+                          />
+                        </Link>
+
+                        {/* Stock Badge */}
+                        <div className="absolute top-4 left-4">
+                          <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                            stockQty > 5
+                              ? 'bg-green-500 text-white'
+                              : stockQty > 0
+                              ? 'bg-yellow-400 text-gray-800'
+                              : 'bg-red-500 text-white'
+                          }`}>
+                            {stockQty > 5 ? 'In Stock' : stockQty > 0 ? 'Low Stock' : 'Out of Stock'}
+                          </span>
                         </div>
 
-                        {/* Wishlist heart → redirects to login if not authed */}
+                        {/* Wishlist */}
                         <button
                           onClick={() => handleAddToWishlist(product)}
-                          className={`absolute top-3 right-3 bg-white p-2 rounded-full shadow-md ${
-                            isInWishlist ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
-                          } transition-colors`}
-                          aria-label="Add to wishlist">
-                          <FiHeart />
+                          className={`absolute top-4 right-4 p-2.5 bg-white rounded-full shadow-lg transition-colors ${
+                            isInWishlist ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
+                          }`}>
+                          <FiHeart className={isInWishlist ? 'fill-current' : ''} />
                         </button>
                       </div>
 
-                      <div className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-lg font-semibold mb-1">
-                              <Link href={`/products/${product.slug}`} className="hover:text-blue-600 transition-colors">
-                                {product.name}
-                              </Link>
-                            </h3>
-                            <p className="text-sm text-gray-500 mb-2">{product.category}</p>
-                          </div>
-                          <p className="text-lg font-bold text-blue-700">${Number(product.price).toFixed(2)}</p>
+                      {/* Content */}
+                      <div className="p-5">
+                        <div className="mb-3">
+                          <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">
+                            {product.category}
+                          </span>
                         </div>
 
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="flex items-center">
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <svg key={i} className={`w-4 h-4 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400' : i < (product.rating || 0) ? 'text-yellow-300' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                            </div>
-                            <span className="text-xs text-gray-500 ml-1">({product.rating || 0})</span>
-                          </div>
+                        <Link href={`/products/${product.slug}`}>
+                          <h3 className="text-lg font-bold text-gray-800 mb-2 hover:text-green-600 transition-colors line-clamp-1">
+                            {product.name}
+                          </h3>
+                        </Link>
 
-                          <span className={`text-xs px-2 py-1 rounded ${stockBadgeClass}`}>{stockLabel}</span>
+                        {/* Rating */}
+                        <div className="flex items-center gap-1 mb-4">
+                          {[...Array(5)].map((_, i) => (
+                            <FiStar
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < Math.floor(product.rating || 0)
+                                  ? 'text-yellow-400 fill-current'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                          <span className="text-xs text-gray-500 ml-1">({product.rating || 0})</span>
                         </div>
 
-                        {/* Add to Cart → redirects to login if not authed */}
-                        <button
-                          onClick={() => handleAddToCart(product)}
-                          disabled={stockQty === 0}
-                          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition-colors flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed">
-                          <FiShoppingCart className="mr-2" />
-                          {stockQty === 0 ? 'Out of Stock' : 'Add to Cart'}
-                        </button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            )}
-
-            {/* List view */}
-            {!isLoading && viewMode === 'list' && (
-              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
-                {filteredProducts.map((product) => {
-                  const stockQty = typeof product.quantity === 'number'
-                    ? product.quantity
-                    : (typeof product.stock === 'number' ? product.stock : 0);
-                  const stockLabel = stockQty > 5 ? 'In Stock' : stockQty > 0 ? 'Low Stock' : 'Out of Stock';
-                  const stockBadgeClass = stockQty > 5
-                    ? 'bg-green-100 text-green-800'
-                    : stockQty > 0
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800';
-
-                  const isInWishlist = safeWishlistItems.some(
-                    (item) => (item._id || item.id) === (product._id || product.id)
-                  );
-
-                  return (
-                    <motion.div key={product._id || product.id} variants={itemVariants} className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col md:flex-row">
-                      <div className="relative h-64 md:h-auto md:w-1/3 overflow-hidden group">
-                        <img
-                          src={product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.jpg'}
-                          alt={product.name || 'Product image'}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          onError={(e) => { e.target.onerror = null; e.target.src = '/images/placeholder.jpg'; }}
-                        />
-
-                        {/* Wishlist heart → redirects to login if not authed */}
-                        <button
-                          onClick={() => handleAddToWishlist(product)}
-                          className={`absolute top-3 right-3 bg-white p-2 rounded-full shadow-md ${
-                            isInWishlist ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
-                          } transition-colors`}
-                          aria-label="Add to wishlist">
-                          <FiHeart />
-                        </button>
-                      </div>
-
-                      <div className="p-6 flex-1 flex flex-col">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="text-xl font-semibold">
-                              <Link href={`/products/${product.slug}`} className="hover:text-blue-600 transition-colors">
-                                {product.name}
-                              </Link>
-                            </h3>
-                            <p className="text-sm text-gray-500">{product.category}</p>
-                          </div>
-                          <p className="text-xl font-bold text-blue-700">${Number(product.price).toFixed(2)}</p>
-                        </div>
-
-                        <p className="text-gray-600 mb-4">{product.description || 'No description available for this product.'}</p>
-
-                        <div className="flex items-center mt-auto">
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <svg key={i} className={`w-4 h-4 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400' : i < (product.rating || 0) ? 'text-yellow-300' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-500 ml-1">({product.rating || 0})</span>
-                          <span className={`text-xs px-2 py-1 rounded ml-4 ${stockBadgeClass}`}>{stockLabel}</span>
-                        </div>
-
-                        <div className="flex space-x-4 mt-6">
-                          {/* Add to Cart → redirects to login if not authed */}
+                        {/* Price & Button */}
+                        <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100">
+                          <p className="text-2xl font-bold text-gray-800">
+                            ${Number(product.price).toFixed(2)}
+                          </p>
                           <button
                             onClick={() => handleAddToCart(product)}
                             disabled={stockQty === 0}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition-colors flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            <FiShoppingCart className="mr-2" />
+                            className="bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+                            <FiShoppingCart className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            )}
+
+            {/* List View */}
+            {!isLoading && viewMode === 'list' && (
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
+                {filteredProducts.map((product) => {
+                  const stockQty = typeof product.quantity === 'number' ? product.quantity : 0;
+                  const isInWishlist = safeWishlistItems.some(
+                    (item) => (item._id || item.id) === (product._id || product.id)
+                  );
+
+                  return (
+                    <motion.div
+                      key={product._id || product.id}
+                      variants={itemVariants}
+                      className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-green-400 flex flex-col md:flex-row">
+                      {/* Image */}
+                      <div className="relative h-64 md:h-auto md:w-80 overflow-hidden bg-gray-100 group">
+                        <Link href={`/products/${product.slug}`}>
+                          <img
+                            src={product.images?.[0] || '/images/placeholder.jpg'}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e) => { e.target.src = '/images/placeholder.jpg'; }}
+                          />
+                        </Link>
+
+                        <button
+                          onClick={() => handleAddToWishlist(product)}
+                          className={`absolute top-4 right-4 p-2.5 bg-white rounded-full shadow-lg transition-colors ${
+                            isInWishlist ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
+                          }`}>
+                          <FiHeart className={isInWishlist ? 'fill-current' : ''} />
+                        </button>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-6 flex-1 flex flex-col">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2 block">
+                              {product.category}
+                            </span>
+                            <Link href={`/products/${product.slug}`}>
+                              <h3 className="text-2xl font-bold text-gray-800 hover:text-green-600 transition-colors">
+                                {product.name}
+                              </h3>
+                            </Link>
+                          </div>
+                          <p className="text-3xl font-bold text-gray-800">${Number(product.price).toFixed(2)}</p>
+                        </div>
+
+                        <p className="text-gray-600 mb-4 line-clamp-2">
+                          {product.description || 'Premium quality product for your home.'}
+                        </p>
+
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <FiStar
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < Math.floor(product.rating || 0)
+                                    ? 'text-yellow-400 fill-current'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                            <span className="text-sm text-gray-500 ml-1">({product.rating || 0})</span>
+                          </div>
+
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            stockQty > 5
+                              ? 'bg-green-100 text-green-700'
+                              : stockQty > 0
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {stockQty > 5 ? 'In Stock' : stockQty > 0 ? 'Low Stock' : 'Out of Stock'}
+                          </span>
+                        </div>
+
+                        <div className="flex gap-3 mt-auto">
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            disabled={stockQty === 0}
+                            className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                            <FiShoppingCart />
                             {stockQty === 0 ? 'Out of Stock' : 'Add to Cart'}
                           </button>
-                          <Link href={`/products/${product.slug}`} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center">
+                          <Link
+                            href={`/products/${product.slug}`}
+                            className="px-6 py-3 border-2 border-gray-300 rounded-xl hover:border-green-500 hover:text-green-600 transition-colors font-semibold">
                             View Details
                           </Link>
                         </div>
@@ -437,23 +511,29 @@ export default function ProductsPage() {
               </motion.div>
             )}
 
-            {/* Empty state */}
+            {/* Empty State */}
             {!isLoading && filteredProducts.length === 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-lg shadow-md p-8 text-center">
-                <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-500 mb-6">
-                  {products.length === 0 
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white rounded-2xl shadow-sm p-12 text-center">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FiShoppingCart className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">No products found</h3>
+                <p className="text-gray-600 mb-8">
+                  {products.length === 0
                     ? 'No products available yet. Please check back later.'
                     : 'Try adjusting your filters to find what you\'re looking for.'}
                 </p>
                 {products.length > 0 && (
                   <button
-                    onClick={() => { setSelectedCategory('All'); setPriceRange([0, 1000]); setSortBy('featured'); }}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    onClick={() => {
+                      setSelectedCategory('All');
+                      setPriceRange([0, 1000]);
+                      setSortBy('featured');
+                    }}
+                    className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold transition-colors">
                     Reset Filters
                   </button>
                 )}
